@@ -3,6 +3,7 @@ package cos418_hw1_1
 import (
 	"bufio"
 	"io"
+	"os"
 	"strconv"
 )
 
@@ -10,8 +11,11 @@ import (
 // You should only output to `out` once.
 // Do NOT modify function signature.
 func sumWorker(nums chan int, out chan int) {
-	// TODO: implement me
-	// HINT: use for loop over `nums`
+	sum := 0
+	for num := range nums {
+		sum += num
+	}
+	out <- sum
 }
 
 // Read integers from the file `fileName` and return sum of all values.
@@ -20,10 +24,39 @@ func sumWorker(nums chan int, out chan int) {
 // You should use `checkError` to handle potential errors.
 // Do NOT modify function signature.
 func sum(num int, fileName string) int {
-	// TODO: implement me
-	// HINT: use `readInts` and `sumWorkers`
-	// HINT: used buffered channels for splitting numbers between workers
-	return 0
+	// First, open the file and scan the numbers into []int.
+	f, err := os.Open(fileName)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+	ints, err := readInts(f)
+	if err != nil {
+		panic(err)
+	}
+
+	// Next, create our `out` and `nums` channels. Create `num` workers and send
+	// the integers into the `nums` channel.
+	out := make(chan int, len(ints))
+	nums := make(chan int, num)
+	for i := 0; i < num; i++ {
+		go sumWorker(nums, out)
+	}
+	for _, i := range ints {
+		nums <- i
+	}
+	close(nums)
+
+	// Since we know that we only send from each of the workers once into `out`,
+	// we only need to pull off of `out` `num` times.
+	sum := 0
+	for i := 0; i < num; i++ {
+		n := <-out
+		sum += n
+	}
+	close(out)
+
+	return sum
 }
 
 // Read a list of integers separated by whitespace from `r`.

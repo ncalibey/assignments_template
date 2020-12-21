@@ -1,9 +1,15 @@
 package cos418_hw1_1
 
 import (
+	"bufio"
 	"fmt"
+	"os"
+	"regexp"
 	"sort"
+	"strings"
 )
+
+var filter = regexp.MustCompile(`[^0-9a-zA-Z]+`)
 
 // Find the top K most common words in a text document.
 // 	path: location of the document
@@ -18,7 +24,45 @@ func topWords(path string, numWords int, charThreshold int) []WordCount {
 	// TODO: implement me
 	// HINT: You may find the `strings.Fields` and `strings.ToLower` functions helpful
 	// HINT: To keep only alphanumeric characters, use the regex "[^0-9a-zA-Z]+"
-	return nil
+	seen := map[string]int{}
+
+	// First we open up the file and scan over each of the wordCounts.
+	f, err := os.Open(path)
+	if err != nil {
+		panic("no file found at supplied path")
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	scanner.Split(bufio.ScanWords)
+	for scanner.Scan() {
+		// We grab the word and convert it to lowercase. We then strip it of punctuation.
+		// If the length of the word is less than `charThreshold`, we skip it.
+		word := strings.ToLower(scanner.Text())
+		word = string(filter.ReplaceAll([]byte(word), []byte("")))
+		if len(word) < charThreshold {
+			continue
+		}
+
+		// If we've seen the word, increment the count. Otherwise add it.
+		if _, ok := seen[word]; !ok {
+			seen[word] = 1
+		} else {
+			seen[word]++
+		}
+	}
+
+	// Iterate over the map and turn it into a []WordCount. Then sort the results and return.
+	wordCounts := []WordCount{}
+	for k, v := range seen {
+		wc := WordCount{
+			Word:  k,
+			Count: v,
+		}
+		wordCounts = append(wordCounts, wc)
+	}
+	sortWordCounts(wordCounts)
+	return wordCounts[0:numWords]
 }
 
 // A struct that represents how many times a word is observed in a document
