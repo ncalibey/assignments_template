@@ -33,7 +33,6 @@ func mapF(document string, value string) (res []mapreduce.KeyValue) {
 // list of that key's string value (merged across all inputs). The return value
 // should be a single output value for that key.
 func reduceF(key string, values []string) string {
-	// TODO: you also have to write this function
 	var sum int64 = 0
 	for _, value := range values {
 		i, err := strconv.ParseInt(value, 10, 64)
