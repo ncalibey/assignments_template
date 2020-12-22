@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-	"mapreduce"
 	"os"
+
+	"../mapreduce"
 )
 
 // The mapping function is called once for each piece of the input.
