@@ -55,6 +55,8 @@ func (mr *Master) callRPC(i, nios int, wg *sync.WaitGroup, phase jobPhase) {
 	ok := call(w, "Worker.DoTask", args, &struct{}{})
 	if !ok {
 		fmt.Printf("Master: RPC %s do_task error\n", w)
+		go mr.callRPC(i, nios, wg, phase)
+		return
 	}
 	go func() {
 		mr.registerChannel <- w
